@@ -1,0 +1,24 @@
+{
+  "name": "dispatch-server-new",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "cloudflare": {
+    "bindings": {
+      "SECRET_KEY": {
+        "description": "Encrypts the Postman API keys you add in the admin panel. Use at least 32 random characters: generate one with `openssl rand -hex 32`. Changing it later means re-entering every stored key."
+      },
+      "ADMIN_PASSWORD": {
+        "description": "Needed only when REQUIRE_AUTH is \"false\": the password that unlocks the admin panel via POST /auth/admin-login. Generate one with `openssl rand -hex 24`."
+      },
+      "DB": {
+        "description": "D1 database storing users, tokens, settings, Postman accounts, uid maps and the audit log. Created automatically on first deploy; the Worker migrates its schema itself on the first request."
+      }
+    }
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

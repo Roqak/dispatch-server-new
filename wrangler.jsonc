@@ -1,0 +1,46 @@
+// dispatch-server on Cloudflare Workers. See README.md here for deploy steps.
+// Keep this file in worker/: a wrangler config at the repo root would take over
+// the landing page deploy, which uses wrangler.toml there.
+// This folder must stay self-contained: the Deploy to Cloudflare button treats
+// it as the root of a new repository, so nothing here can point outside it.
+// D1 is AUTO-PROVISIONED on deploy because database_id is omitted. To bind an
+// existing database instead, add "database_id": "<your id>" yourself.
+// The schema needs no separate apply step: the Worker migrates itself on the
+// first request (same idempotent CREATE TABLE IF NOT EXISTS the binary runs).
+{
+  "name": "dispatch-server-new",
+  "main": "src/index.js",
+  "compatibility_date": "2024-09-25",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dispatch-server","database_id": "40f5e4bf-5455-4692-bb3d-0d5dace97d23"
+    }
+  ],
+  // The admin panel. This is a copy of ../server/admin/: edit both, or npm test
+  // fails.
+  // run_worker_first: every request reaches the Worker, which serves the panel
+  // itself. Without it, the panel's files would answer on documentation domains.
+  "assets": {
+    "directory": "admin",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "vars": {
+    // "true" (default): user accounts with roles. "false": open proxy +
+    // /auth/admin-login with the ADMIN_PASSWORD secret.
+    "REQUIRE_AUTH": "true",
+    // Postman hosts EU accounts separately: "us" or "eu".
+    "POSTMAN_REGION": "us"
+    // Optional overrides (uncomment to use):
+    // "POSTMAN_API_BASE": "https://api.postman.com", // base URL override (test hook)
+    // "PBKDF2_ITERATIONS": "10000", // password-hash rounds; 100_000 fits paid plans
+    // "DOCS_ALLOW_HTTP": "true" // test hook: documentation domains over plain http, with ports
+  }
+  // Secrets (the Deploy button prompts for these from .dev.vars.example;
+  // manually: npx wrangler secret put <name>):
+  //   SECRET_KEY        — encrypts the Postman keys added in the admin panel;
+  //                       at least 32 random characters (openssl rand -hex 32)
+  //   POSTMAN_API_KEY   — optional: one more Postman key, set here instead of in the panel
+  //   ADMIN_PASSWORD    — only needed when REQUIRE_AUTH is "false"
+}

@@ -1,0 +1,8 @@
+# dispatch-server on Cloudflare Workers. The Deploy to Cloudflare button
+# prompts for these. Manually: `npx wrangler secret put <NAME>` (do NOT put real values in this file and
+# do NOT commit .dev.vars).
+# Encrypts the Postman keys you add in the admin panel. Generate one with:
+#   openssl rand -hex 32
+# Changing it later means re-entering every stored key.
+SECRET_KEY=replace-with-at-least-32-random-characters
+ADMIN_PASSWORD=choose-a-strong-admin-password

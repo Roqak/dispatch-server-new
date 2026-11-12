@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Dispatch Admin</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<!-- Login view -->
+<main id="view-login" class="login-wrap">
+  <section class="card login-card">
+    <div class="brand login-brand"><img src="./favicon.svg" alt="">Dispatch <span class="brand-sub">Admin</span></div>
+    <h1 class="login-title" id="login-title">Sign in</h1>
+    <p class="muted login-sub" id="login-sub">Manage Postman accounts, users and who can reach which workspace.</p>
+    <form id="login-form" data-mode="credentials" novalidate>
+      <div class="field cred-only">
+        <label for="login-email">Email</label>
+        <input id="login-email" type="email" autocomplete="username" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="login-password" id="login-password-label">Password</label>
+        <input id="login-password" type="password" autocomplete="current-password">
+      </div>
+      <p class="form-error" id="login-error" role="alert" hidden></p>
+      <button class="btn primary block" id="login-submit" type="submit">Sign in</button>
+    </form>
+    <p class="login-host muted" id="login-host"></p>
+    <p class="mode-switch">
+      <button class="link" id="register-toggle" type="button">New server? Create the first account</button>
+      <button class="link" id="mode-toggle" type="button">Use server admin password instead</button>
+    </p>
+  </section>
+</main>
+
+<!-- App view: Postman accounts / workspaces / users / settings / audit -->
+<div id="view-app" class="shell" hidden>
+  <aside class="sidebar">
+    <div class="brand side-brand"><img src="./favicon.svg" alt="">Dispatch <span class="brand-sub">Admin</span></div>
+    <nav class="tabs" aria-label="Admin sections">
+      <button class="tab" data-tab="accounts" type="button"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.500" cy="10.500" r="3"/><path d="M7.700 8.300 13.500 2.500M11 5l2 2M9.500 6.500l1.500 1.500"/></svg>Postman accounts<span class="tab-count" id="accounts-count"></span></button>
+      <button class="tab" data-tab="workspaces" type="button"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="4" rx="1"/><rect x="2" y="9" width="12" height="4" rx="1"/></svg>Workspaces<span class="tab-count" id="workspaces-count"></span></button>
+      <button class="tab active" data-tab="users" type="button"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c.4-2.6 2.2-4 4.5-4s4.100 1.400 4.500 4"/><path d="M11 3.300a2.500 2.500 0 0 1 0 4.400M12.500 9.800c1.100.6 1.800 1.900 2 3.700"/></svg>Users<span class="tab-count" id="users-count"></span></button>
+      <button class="tab" data-tab="docs" type="button"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2.500h7l3 3v8H3z"/><path d="M5.500 8h5M5.500 10.500h5"/></svg>Documentation<span class="tab-count" id="docs-count"></span></button>
+      <button class="tab" data-tab="settings" type="button"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.500h6M12 4.500h2M2 11.500h2M8 11.500h6"/><circle cx="10" cy="4.500" r="2"/><circle cx="6" cy="11.500" r="2"/></svg>Settings</button>
+      <button class="tab" data-tab="audit" type="button"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h6"/></svg>Audit log</button>
+    </nav>
+    <div class="side-foot">
+      <span class="avatar" id="me-avatar" aria-hidden="true"></span>
+      <span id="me-email" class="me-email"></span>
+      <button class="icon-btn" id="logout-btn" type="button" title="Log out" aria-label="Log out"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.500H3.500a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6"/><path d="M10.500 11l3-3-3-3M13.500 8H6"/></svg></button>
+    </div>
+  </aside>
+
+  <main class="content">
+
+    <!-- Postman accounts -->
+    <section id="tab-accounts" class="panel" hidden>
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Postman accounts</h2>
+          <p class="panel-desc">Postman API keys this server uses. Their workspaces become available to the users you grant them to.</p>
+        </div>
+        <div class="panel-tools">
+          <button class="icon-btn" id="accounts-refresh" type="button" title="Check again" aria-label="Check accounts again"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.500 8a5.500 5.500 0 1 1-1.600-3.900"/><path d="M13.500 2v3h-3"/></svg></button>
+          <button class="btn primary" id="account-add" type="button">Add account</button>
+        </div>
+      </div>
+      <div class="notice bad" id="secret-notice" role="alert" hidden>
+        <svg class="ico notice-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2 14.2 13H1.8z"/><path d="M8 6.5v3M8 11.2v.01"/></svg>
+        <p><b>This server can't store keys yet.</b> Set a <code>SECRET_KEY</code> secret of at least 32 random characters (<code>openssl rand -hex 32</code>), then come back.</p>
+      </div>
+      <div class="onboard" id="accounts-empty" hidden>
+        <h3>Connect a Postman account</h3>
+        <ol>
+          <li>Create an API key in <a href="https://go.postman.co/settings/me/api-keys" target="_blank" rel="noopener">Postman's API key settings</a>.</li>
+          <li>Add it here. Its workspaces appear in Dispatch straight away.</li>
+          <li>Choose who gets which workspace. Changes sync both ways, so people on Postman and on Dispatch share the same work.</li>
+        </ol>
+        <button class="btn primary" id="account-add-empty" type="button">Add account</button>
+        <p class="muted onboard-alt">Not using Postman? <button class="link" id="workspace-new-empty" type="button">Create a workspace on this server</button> instead. Collections and environments are then stored here.</p>
+      </div>
+      <div class="tablewrap" id="accounts-table">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Account</th>
+              <th scope="col">Key</th>
+              <th scope="col">Workspaces</th>
+              <th scope="col">API usage</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="u-actions-h"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="accounts-body"></tbody>
+        </table>
+      </div>
+      <p class="table-foot muted" id="accounts-foot" hidden>Keys are encrypted on this server and never shown again. In Postman, changes made through a key appear as made by that key's owner; the audit log here records who actually made them.</p>
+    </section>
+
+    <!-- Workspaces -->
+    <section id="tab-workspaces" class="panel" hidden>
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Workspaces</h2>
+          <p class="panel-desc">Everything users can work in: workspaces from connected Postman accounts, and ones stored on this server.</p>
+        </div>
+        <div class="panel-tools">
+          <label class="search"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.500"/><path d="M10.500 10.500 14 14"/></svg><span class="visually-hidden">Search workspaces</span><input id="workspaces-search" type="search" placeholder="Search workspaces" spellcheck="false"></label>
+          <button class="icon-btn" id="workspaces-refresh" type="button" title="Refresh" aria-label="Refresh workspaces"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.500 8a5.500 5.500 0 1 1-1.600-3.900"/><path d="M13.500 2v3h-3"/></svg></button>
+          <button class="btn primary" id="workspace-new" type="button">New workspace</button>
+        </div>
+      </div>
+      <div class="notice warn" id="workspaces-failed" hidden><svg class="ico notice-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2 14.2 13H1.8z"/><path d="M8 6.5v3M8 11.2v.01"/></svg><p id="workspaces-failed-text"></p></div>
+      <div class="tablewrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Workspace</th>
+              <th scope="col">Through</th>
+              <th scope="col">Who has access</th>
+              <th scope="col" class="u-actions-h"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="workspaces-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Users -->
+    <section id="tab-users" class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Users</h2>
+          <p class="panel-desc">People who can sign in to this server, their role, and the workspaces they can reach.</p>
+        </div>
+        <div class="panel-tools">
+          <label class="search"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.500"/><path d="M10.500 10.500 14 14"/></svg><span class="visually-hidden">Search users</span><input id="users-search" type="search" placeholder="Search by email" spellcheck="false"></label>
+          <button class="icon-btn" id="users-refresh" type="button" title="Refresh" aria-label="Refresh users"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.500 8a5.500 5.500 0 1 1-1.600-3.900"/><path d="M13.500 2v3h-3"/></svg></button>
+          <button class="btn primary" id="add-user-open" type="button">Add user</button>
+        </div>
+      </div>
+
+      <div class="notice warn" id="reg-notice" hidden>
+        <svg class="ico notice-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2 14.2 13H1.8z"/><path d="M8 6.5v3M8 11.2v.01"/></svg>
+        <p><b>Registration is open.</b> Anyone who can reach this server can create an account. They see nothing until you give them a workspace.</p>
+        <button class="btn sm" id="reg-close" type="button">Turn off</button>
+      </div>
+      <div class="notice info" id="key-notice" hidden>
+        <svg class="ico notice-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 7.2v3.6M8 5.2v.01"/></svg>
+        <p><b>No workspaces yet.</b> People can sign in but have nothing to work in. Connect a Postman account, or create a workspace on this server.</p>
+        <button class="btn sm" id="key-notice-go" type="button">Add a workspace</button>
+      </div>
+
+      <form id="add-user-form" class="card add-user" novalidate hidden>
+        <div class="add-grid">
+          <div class="field">
+            <label for="new-email">Email</label>
+            <input id="new-email" type="email" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="new-password">Password</label>
+            <input id="new-password" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+          </div>
+          <div class="field">
+            <label for="new-role">Role</label>
+            <select id="new-role">
+              <option value="viewer">Viewer</option>
+              <option value="editor">Editor</option>
+              <option value="creator">Creator</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="add-actions">
+            <button class="btn" id="add-user-cancel" type="button">Cancel</button>
+            <button class="btn primary" id="add-user-submit" type="submit">Create user</button>
+          </div>
+        </div>
+        <p class="form-error" id="add-user-error" role="alert" hidden></p>
+      </form>
+
+      <div class="tablewrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Email</th>
+              <th scope="col">Role</th>
+              <th scope="col">Workspace access</th>
+              <th scope="col">Created</th>
+              <th scope="col" class="u-actions-h"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+
+      <h3 class="role-key-title">What each role can do</h3>
+      <dl class="role-key">
+        <div><dt>Viewer</dt><dd>Read only, with private variable values hidden</dd></div>
+        <div><dt>Editor</dt><dd>Edit collections and environments</dd></div>
+        <div><dt>Creator</dt><dd>Editor, plus create collections</dd></div>
+        <div><dt>Admin</dt><dd>Everything, including deletes and this panel</dd></div>
+      </dl>
+    </section>
+
+    <!-- Documentation -->
+    <section id="tab-docs" class="panel" hidden>
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Documentation</h2>
+          <p class="panel-desc">Public sites published from the Dispatch app. Each one is served only on its own verified domain.</p>
+        </div>
+        <div class="panel-tools">
+          <button class="icon-btn" id="docs-refresh" type="button" title="Refresh" aria-label="Refresh documentation sites"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.500 8a5.500 5.500 0 1 1-1.600-3.900"/><path d="M13.500 2v3h-3"/></svg></button>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Site</th>
+              <th scope="col">Domain</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="u-actions-h"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="docs-body"></tbody>
+        </table>
+      </div>
+      <p class="table-foot muted" id="docs-foot" hidden>To verify a domain, point it at this server and set up HTTPS for it, or add the TXT record shown, then press Verify. A site goes live once its domain is verified and it has a published version.</p>
+    </section>
+
+    <!-- Settings -->
+    <section id="tab-settings" class="panel" hidden>
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Settings</h2>
+          <p class="panel-desc">How people join this server.</p>
+        </div>
+      </div>
+      <h3 class="section-title">Registration</h3>
+      <div class="card setting-card">
+        <label class="switch" for="allow-registration">
+          <input type="checkbox" id="allow-registration">
+          <span class="slider" aria-hidden="true"></span>
+          <span class="setting-text">Allow registration
+            <small class="muted">Anyone who can reach this server can create an account. New accounts are viewers with no workspaces until you grant some. Turn this off to add people only from Users. Existing users can always sign in.</small>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Audit log -->
+    <section id="tab-audit" class="panel" hidden>
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Audit log</h2>
+          <p class="panel-desc">Every call made through this server and every change to accounts, users and access.</p>
+        </div>
+        <div class="panel-tools">
+          <label class="search"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.500"/><path d="M10.500 10.500 14 14"/></svg><span class="visually-hidden">Filter the audit log</span><input id="audit-search" type="search" placeholder="Filter by user or request" spellcheck="false"></label>
+          <label class="visually-hidden" for="audit-status">Status</label>
+          <select id="audit-status" class="status-filter">
+            <option value="">All statuses</option>
+            <option value="failed">Failed only</option>
+          </select>
+          <button class="icon-btn" id="audit-refresh" type="button" title="Refresh" aria-label="Refresh audit log"><svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.500 8a5.500 5.500 0 1 1-1.600-3.900"/><path d="M13.500 2v3h-3"/></svg></button>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Time</th>
+              <th scope="col">User</th>
+              <th scope="col">Action</th>
+              <th scope="col">Request</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody id="audit-body"></tbody>
+        </table>
+      </div>
+      <p class="table-foot muted" id="audit-foot"></p>
+    </section>
+
+  </main>
+</div>
+
+<dialog id="dialog" class="modal">
+  <form id="dialog-form" method="dialog" novalidate>
+    <h2 id="dialog-title"></h2>
+    <div id="dialog-body"></div>
+    <p class="form-error" id="dialog-error" role="alert" hidden></p>
+    <div class="modal-actions">
+      <button class="btn" id="dialog-cancel" type="button">Cancel</button>
+      <button class="btn primary" id="dialog-ok" type="submit">OK</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="./app.js"></script>
+</body>
+</html>
